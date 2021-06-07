@@ -2,31 +2,24 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import xgboost as xgb
+import plotly.express as px
 import datetime
 
-model = xgb.XGBRegressor()
-model.load_model("model.json")
-
-# dates = ['14/2/2021', '13/2/2021', '12/2/2021', '11/2/2021', '9/2/2021',
-#        '8/2/2021', '7/2/2021', '6/2/2021', '5/2/2021', '4/2/2021',
-#        '3/2/2021', '2/2/2021', '1/2/2021', '31/1/2021', '30/1/2021',
-#        '29/1/2021', '28/1/2021', '27/1/2021', '26/1/2021', '25/1/2021',
-#        '24/1/2021', '23/1/2021', '22/1/2021', '21/1/2021', '20/1/2021',
-#        '19/1/2021', '18/1/2021', '17/1/2021', '16/1/2021', '15/1/2021',
-#        '14/1/2021', '13/1/2021']
-
-
+model_sales, model_imp, model_reach = xgb.XGBRegressor(), xgb.XGBRegressor(), xgb.XGBRegressor()
+model_sales.load_model("model_sales.json")
+model_imp.load_model("model_impressions.json")
+model_reach.load_model("model_reach.json")
 
 st.set_page_config(page_title ="Kapten Batik Sales Prediction",
                     initial_sidebar_state="collapsed",
                     page_icon="🔮")
 
-st.title('📈 Kapten Batik Sales Prediction')
-st.write('This app enables you to predict Kapten Batik\'s sale numbers based on their previous ad campaigns.')
+st.title('📈 Kapten Batik Prediction')
+st.write('This app enables you to predict Kapten Batik\'s sale, impressions and reach numbers based on their previous ad campaigns.')
 
 with st.beta_container():
 	st.subheader('Dataset 🏋️')
-	st.write('The dataset used is from Kapten Batik\'s Facebook data about their ad campaigns. Here the app will try to predict the sales based on the given parameters.')
+	st.write('The dataset used is from Kapten Batik\'s Facebook data about their ad campaigns. Here the app will try to predict the sales, impressions and reach based on the given parameters.')
 	st.write('Please note that because of the low number of usable data after cleaning there is dummy data inside the dataset.')
 
 	with st.beta_expander('View of Dataset (Uncleaned)'):
@@ -38,9 +31,7 @@ with st.beta_container():
 		st.write('Age : Age of the customer.')
 		st.write('Gender : Gender of the customer')
 		st.write('Day : Date of the sale.')
-		st.write('Impressions : The number of times the ad is fetched.')
 		st.write('Amount Spent (MYR): The amount spent in MYR for the ad.')
-		st.write('Reach : Refers to the total number of people who have seen the ad.')
 
 with st.beta_container():
 	st.subheader('Input Parameters 🛠️')
@@ -60,23 +51,18 @@ with st.beta_container():
 
 	with st.beta_expander('Day'):
 		date = st.date_input(
-			"Select Day",value = datetime.date(2021, 1, 13), min_value=datetime.date(2021, 1, 13), max_value=datetime.date(2021, 2, 14)
+			"Select Day",value = datetime.date(2021, 1, 13), min_value=datetime.date(2021, 1, 13)
 			)
-
-	with st.beta_expander('Impressions'):
-		impression = st.number_input(value=0, label="Input number of Impressions", min_value=0, max_value=20000)
+		date_list = pd.date_range('13/1/2021',date)
 
 	with st.beta_expander('Amount Spent (MYR)'):
-		amountSpent = st.number_input(value=0.0, label="Input amount spent", min_value=0.0, max_value=100.0)
-
-	with st.beta_expander('Reach'):
-		reach = st.number_input(value=0, label="Input reach", min_value=0, max_value=14000)
+		amountSpent = st.number_input(value=0.0, label="Input amount spent", min_value=0.0, max_value=1000.0)
 
 with st.beta_container():
 	st.subheader("Prediction 🔮")
 	st.write('Model will try to predict sales from the input parameters given.')
 
-	if st.checkbox('Predict Sales', key='predict'):
+	if st.button('Predict!', key='predict'):
 		try:
 			with st.spinner('Predicting...'):
 
@@ -100,24 +86,25 @@ with st.beta_container():
 				if age == '65+':
 					age_65 = 1
 
-				df_input = pd.DataFrame({"Impressions" : impression, 
-                         "Amount spent (MYR)"  : amountSpent,
-                         "Reach" : reach, 
-                         "Day" : date.day,
-                         "Month" : date.month,
-                         "gdr_female" : 1,
-                         "gdr_male" : 0,
-                         "age_13-17": 0,
-                         "age_25-34": 1,
-                         "age_35-44": 0,
-                         "age_45-54": 0,
-                         "age_55-64": 0,
-                         "age_65+": 0,
-                        }, index=[0])
+				row = []
+				for date in date_list:
+					row.append([amountSpent, date.day, date.month, date.year, female, male, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65]) 
 
-				prediction = model.predict(df_input)
-				st.write("Predicted Sales: ", round(prediction[0],2))
+				df_input = pd.DataFrame(row, columns=["Amount spent (MYR)", "Day", "Month", "Year", "gdr_female", "gdr_male", "age_13-17", "age_25-34", "age_35-44", "age_45-54", "age_55-64", "age_65+"])
+				sales_pred = model_sales.predict(df_input)
+				imp_pred = model_imp.predict(df_input)
+				reach_pred = model_reach.predict(df_input)
+
+				data = {'Date': date_list.date, 'Sales': sales_pred, 'Impressions': imp_pred, 'Reach': reach_pred}
+				df_pred = pd.DataFrame(data)
+
+				fig = px.line(df_pred, x="Date", y=df_pred.columns,
+				              hover_data={"Date": "|%B %d, %Y"},
+				              title='Prediction Chart')
+				fig.update_xaxes(
+				    dtick="M1",
+				    tickformat="%b\n%Y")
+
+				st.plotly_chart(fig, use_container_width=True)
 		except:
-			st.warning('Oops error!')
-
-# prediction = model.predict(df_test)
+			st.write('Oops error!')
