@@ -30,7 +30,7 @@ with st.beta_container():
 		st.markdown('The dataset is cleaned and the given parameters are chosen to determine the sales.')
 		st.write('Age : Age of the customer.')
 		st.write('Gender : Gender of the customer')
-		st.write('Day : Date of the sale.')
+		st.write('Day : Date of the sale. This app will predict all dates leading up to the date chosen')
 		st.write('Amount Spent (MYR): The amount spent in MYR for the ad.')
 
 with st.beta_container():
@@ -51,7 +51,7 @@ with st.beta_container():
 
 	with st.beta_expander('Day'):
 		date = st.date_input(
-			"Select Day",value = datetime.date(2021, 1, 13), min_value=datetime.date(2021, 1, 13)
+			"Select Day to Predict",value = datetime.date(2021, 1, 13), min_value=datetime.date(2021, 1, 13)
 			)
 		date_list = pd.date_range('13/1/2021',date)
 
