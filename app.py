@@ -20,7 +20,7 @@ st.write('This app enables you to predict Kapten Batik\'s sale, impressions and 
 with st.beta_container():
 	st.subheader('Dataset 🏋️')
 	st.write('The dataset used is from Kapten Batik\'s Facebook data about their ad campaigns. Here the app will try to predict the sales, impressions and reach based on the given parameters.')
-	st.write('Please note that because of the low number of usable data after cleaning there is dummy data inside the dataset.
+	st.write('Please note that because of the low number of usable data after cleaning there is dummy data inside the dataset.')
 
 	with st.beta_expander('Parameters Used'):
 		st.markdown('The dataset is cleaned and the given parameters are chosen to determine the sales.')
