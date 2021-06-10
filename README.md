@@ -19,12 +19,17 @@ After cloning the rep with
 git clone https://github.com/konroy/kb_prediction.git
 ```
 
+Go into the app folder
+```bash
+cd kb_prediction
+```
+
 Install the requirements in requirement.txt
 ```bash
 pip install -r requirements.txt
 ```
 
-Cd into the app folder and run the app with
+Run the app with
 ```bash
 streamlit run app.py
 ```
