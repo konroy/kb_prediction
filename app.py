@@ -26,7 +26,8 @@ with st.beta_container():
 		st.markdown('The dataset is cleaned and the given parameters are chosen to determine the sales.')
 		st.write('Age : Age of the customer.')
 		st.write('Gender : Gender of the customer')
-		st.write('Day : Date of the sale. This app will predict all dates leading up to the date chosen')
+		st.write('Day : Date of the sale. You will input a start date and end date of the sale.')
+		st.write('Discount: The percentage of discount applied during the ad campaign for the products.')
 		st.write('Amount Spent (MYR): The amount spent in MYR for the ad.')
 
 with st.beta_container():
@@ -46,23 +47,32 @@ with st.beta_container():
 			)
 
 	with st.beta_expander('Day'):
-		date = st.date_input(
-			"Select Day to Predict",value = datetime.date(2021, 1, 13), min_value=datetime.date(2021, 1, 13)
+		start_date = st.date_input(
+			"Select Day to start sale",value = datetime.date(2021, 1, 13), min_value=datetime.date(2021, 1, 13)
 			)
-		date_list = pd.date_range('13/1/2021',date)
+		end_date = st.date_input(
+			"Select Day to end sale",value = datetime.date(2021, 1, 13), min_value=datetime.date(2021, 1, 13)
+			)
+		date_list = pd.date_range(start_date,end_date)
+
+	with st.beta_expander('Discount'):
+		discount = st.selectbox(
+			'Select Discount',
+			('No Discount', '20%', '50%', '70%')
+			)
 
 	with st.beta_expander('Amount Spent (MYR)'):
 		amountSpent = st.number_input(value=0.0, label="Input amount spent", min_value=0.0, max_value=1000.0)
 
 with st.beta_container():
 	st.subheader("Prediction 🔮")
-	st.write('Model will try to predict sales from the input parameters given.')
+	st.write('Model will try to predict sales, impressions and reach from the input parameters given.')
 
 	if st.button('Predict!', key='predict'):
 		try:
 			with st.spinner('Predicting...'):
 
-				male, female, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65 = 0, 0, 0, 0, 0, 0, 0, 0
+				male, female, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65, dis_0, dis_20, dis_50, dis_70 = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 				if gender == 'Male':
 					male = 1
@@ -82,11 +92,20 @@ with st.beta_container():
 				if age == '65+':
 					age_65 = 1
 
+				if discount == 'No Discount':
+					dis_0 = 1
+				if discount == '20%':
+					dis_20 = 1
+				if discount == '50%':
+					dis_50 = 1
+				if discount == '70%':
+					dis_70 = 1
+
 				row = []
 				for date in date_list:
-					row.append([amountSpent, date.day, date.month, date.year, female, male, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65]) 
+					row.append([amountSpent, date.day, date.month, date.year, female, male, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65, dis_0, dis_20, dis_50, dis_70]) 
 
-				df_input = pd.DataFrame(row, columns=["Amount spent (MYR)", "Day", "Month", "Year", "gdr_female", "gdr_male", "age_13-17", "age_25-34", "age_35-44", "age_45-54", "age_55-64", "age_65+"])
+				df_input = pd.DataFrame(row, columns=["Amount spent (MYR)", "Day", "Month", "Year", "gdr_female", "gdr_male", "age_13-17", "age_25-34", "age_35-44", "age_45-54", "age_55-64", "age_65+", "dis_0", "dis_20", "dis_50", "dis_70"])
 				sales_pred = model_sales.predict(df_input)
 				imp_pred = model_imp.predict(df_input)
 				reach_pred = model_reach.predict(df_input)
