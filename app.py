@@ -27,8 +27,9 @@ with st.beta_container():
 		st.write('Age : Age of the customer.')
 		st.write('Gender : Gender of the customer')
 		st.write('Day : Date of the sale. You will input a start date and end date of the sale.')
-		st.write('Discount: The percentage of discount applied during the ad campaign for the products.')
-		st.write('Amount Spent (MYR): The amount spent in MYR for the ad.')
+		st.write('Holiday : The holiday period that affect the sales.')
+		st.write('Discount : The percentage of discount applied during the ad campaign for the products.')
+		st.write('Amount Spent (MYR) : The amount spent in MYR for the ad.')
 
 with st.beta_container():
 	st.subheader('Input Parameters 🛠️')
@@ -51,9 +52,15 @@ with st.beta_container():
 			"Select Day to start sale",value = datetime.date(2021, 1, 13), min_value=datetime.date(2021, 1, 13)
 			)
 		end_date = st.date_input(
-			"Select Day to end sale",value = datetime.date(2021, 1, 13), min_value=datetime.date(2021, 1, 13)
+			"Select Day to end sale",value = start_date, min_value=start_date
 			)
 		date_list = pd.date_range(start_date,end_date)
+
+	with st.beta_expander('Holiday'):
+		holiday = st.selectbox(
+			'Select Holiday',
+			('None', 'Chinese New Year', 'Hari Raya', 'Year End')
+			)
 
 	with st.beta_expander('Discount'):
 		discount = st.selectbox(
@@ -72,7 +79,7 @@ with st.beta_container():
 		try:
 			with st.spinner('Predicting...'):
 
-				male, female, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65, dis_0, dis_20, dis_50, dis_70 = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+				male, female, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65, dis_0, dis_20, dis_50, dis_70, campNone, campCNY, campRaya, campYearEnd = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 				if gender == 'Male':
 					male = 1
@@ -92,6 +99,16 @@ with st.beta_container():
 				if age == '65+':
 					age_65 = 1
 
+				
+				if holiday == 'None':
+					campNone = 1
+				if holiday == 'Chinese New Year':
+					campCNY = 1
+				if holiday == 'Hari Raya':
+					campRaya = 1
+				if holiday == 'Year End':
+					campYearEnd = 1
+
 				if discount == 'No Discount':
 					dis_0 = 1
 				if discount == '20%':
@@ -103,9 +120,9 @@ with st.beta_container():
 
 				row = []
 				for date in date_list:
-					row.append([amountSpent, date.day, date.month, date.year, female, male, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65, dis_0, dis_20, dis_50, dis_70]) 
+					row.append([amountSpent, date.day, date.month, date.year, campCNY, campNone, campRaya, campYearEnd, female, male, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65, dis_0, dis_20, dis_50, dis_70]) 
 
-				df_input = pd.DataFrame(row, columns=["Amount spent (MYR)", "Day", "Month", "Year", "gdr_female", "gdr_male", "age_13-17", "age_25-34", "age_35-44", "age_45-54", "age_55-64", "age_65+", "dis_0", "dis_20", "dis_50", "dis_70"])
+				df_input = pd.DataFrame(row, columns=["Amount spent (MYR)", "Day", "Month", "Year", "camp_CNY Campaign", "camp_None", "camp_Raya Campaign", "camp_Year End Campaign", "gdr_female", "gdr_male", "age_13-17", "age_25-34", "age_35-44", "age_45-54", "age_55-64", "age_65+", "dis_0", "dis_20", "dis_50", "dis_70"])
 				sales_pred = model_sales.predict(df_input)
 				imp_pred = model_imp.predict(df_input)
 				reach_pred = model_reach.predict(df_input)
