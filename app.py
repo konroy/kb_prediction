@@ -76,15 +76,25 @@ with st.beta_container():
 	st.write('Model will try to predict sales, impressions and reach from the input parameters given.')
 
 	if st.button('Predict!', key='predict'):
-		try:
 			with st.spinner('Predicting...'):
 
-				male, female, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65, dis_0, dis_20, dis_50, dis_70, campNone, campCNY, campRaya, campYearEnd = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+				male, female, pr_0_10, pr_10_30, pr_30_60, pr_60_90, pr_90_1000, dr_0_10, dr_10_20, dr_20_31, q1, q2, q3, q4, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65, dis_0, dis_20, dis_50, dis_70, campNone, campCNY, campRaya, campYearEnd = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 				if gender == 'Male':
 					male = 1
 				if gender == 'Female':
 					female = 1
+
+				if amountSpent > 0 and amountSpent <= 10:
+					pr_0_10 = 1
+				elif amountSpent > 10 and amountSpent <= 30:
+					pr_10_30 = 1
+				elif amountSpent > 30 and amountSpent <= 60:
+					pr_30_60 = 1
+				elif amountSpent > 60 and amountSpent <= 90:
+					pr_60_90 = 1
+				elif amountSpent > 90 and amountSpent <= 1000:
+					pr_90_1000 = 1
 
 				if age == '13-17':
 					age_13_17 = 1
@@ -120,9 +130,26 @@ with st.beta_container():
 
 				row = []
 				for date in date_list:
-					row.append([amountSpent, date.day, date.month, date.year, campCNY, campNone, campRaya, campYearEnd, female, male, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65, dis_0, dis_20, dis_50, dis_70]) 
 
-				df_input = pd.DataFrame(row, columns=["Amount spent (MYR)", "Day", "Month", "Year", "camp_CNY Campaign", "camp_None", "camp_Raya Campaign", "camp_Year End Campaign", "gdr_female", "gdr_male", "age_13-17", "age_25-34", "age_35-44", "age_45-54", "age_55-64", "age_65+", "dis_0", "dis_20", "dis_50", "dis_70"])
+					if date.day > 0 and date.day <= 10:
+						dr_0_10 = 1
+					elif date.day > 10 and date.day <= 20:
+						dr_10_20 = 1
+					elif date.day > 20 and date.day <= 31:
+						dr_20_31 = 1
+
+					if date.month > 0 and date.month <= 3:
+						q1 = 1
+					elif date.month > 3 and date.month <= 6:
+						q2 = 1
+					elif date.month > 6 and date.month <= 9:
+						q3 = 1
+					elif date.month > 9 and date.month <= 12:
+						q4 = 1
+
+					row.append([pr_0_10, pr_10_30, pr_30_60, pr_60_90, pr_90_1000, dr_0_10, dr_10_20, dr_20_31, q1, q2, q3, q4, campCNY, campNone, campRaya, campYearEnd, female, male, age_13_17, age_25_34, age_35_44, age_45_54, age_55_64, age_65, dis_0, dis_20, dis_50, dis_70]) 
+
+				df_input = pd.DataFrame(row, columns=["pr_0-10", "pr_10-30", "pr_30-60", "pr_60-90", "pr_90-1000", "dr_0-10", "dr_10-20", "dr_20-31", "mr_q1", "mr_q2", "mr_q3", "mr_q4", "camp_CNY Campaign", "camp_None", "camp_Raya Campaign", "camp_Year End Campaign", "gdr_female", "gdr_male", "age_13-17", "age_25-34", "age_35-44", "age_45-54", "age_55-64", "age_65+", "dis_0", "dis_20", "dis_50", "dis_70"])
 				sales_pred = model_sales.predict(df_input)
 				imp_pred = model_imp.predict(df_input)
 				reach_pred = model_reach.predict(df_input)
@@ -138,5 +165,3 @@ with st.beta_container():
 				    tickformat="%b\n%Y")
 
 				st.plotly_chart(fig, use_container_width=True)
-		except:
-			st.write('Oops error!')
